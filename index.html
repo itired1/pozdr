@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Молитва</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a12;
+            overflow: hidden;
+            font-family: 'Noto Sans SC', sans-serif;
+            color: #fff;
+        }
+        
+        .card {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a12 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .title {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+            margin-bottom: 2rem;
+            background: linear-gradient(90deg, #ffcc00, #ff9966);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            z-index: 10;
+            animation: titleGlow 3s infinite alternate;
+        }
+        
+        .message {
+            font-size: 1.8rem;
+            max-width: 70%;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+            color: #b8b8cc;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.5s forwards 0.5s;
+        }
+        
+        .signature {
+            font-size: 2rem;
+            color: #66ccff;
+            text-shadow: 0 0 8px rgba(102, 204, 255, 0.3);
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            animation: fadeIn 2s forwards 1.5s;
+        }
+        
+        .elemental-particle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(1px);
+            opacity: 0.5;
+            z-index: 1;
+        }
+        
+        .anemo-particle {
+            background: radial-gradient(circle, #66ffcc, transparent 70%);
+            animation: floatUp 15s linear infinite;
+        }
+        
+        .geo-particle {
+            background: radial-gradient(circle, #ffcc66, transparent 70%);
+            animation: floatDown 12s linear infinite;
+        }
+        
+        .electro-particle {
+            background: radial-gradient(circle, #cc66ff, transparent 70%);
+            animation: zigzag 10s linear infinite;
+        }
+        
+        .character {
+            position: absolute;
+            width: 200px;
+            height: 300px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 5;
+            opacity: 0;
+            animation: fadeIn 2s forwards 2s;
+        }
+        
+        .paimon {
+            right: 5%;
+            bottom: 10%;
+            width: 150px;
+            height: 200px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 150"><circle cx="50" cy="40" r="30" fill="%23222244"/><circle cx="50" cy="40" r="25" fill="%23333366"/><circle cx="40" cy="35" r="5" fill="%23fff"/><circle cx="60" cy="35" r="5" fill="%23fff"/><path d="M45,50 Q50,55 55,50" stroke="%23fff" fill="none" stroke-width="2"/><path d="M30,70 L70,70 L65,120 L35,120 Z" fill="%23222244"/><path d="M35,70 L40,100 L30,110 Z" fill="%23333366"/><path d="M65,70 L60,100 L70,110 Z" fill="%23333366"/></svg>');
+            animation: float 4s ease-in-out infinite 2s;
+        }
+        
+        .vision-icon {
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: absolute;
+            opacity: 0.3;
+            z-index: 2;
+            animation: rotateSlow 20s linear infinite;
+        }
+        
+        /* Стили для окна молитвы */
+        .wish-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .wish-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .wish-container {
+            width: 80%;
+            max-width: 800px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0a0a12 100%);
+            border: 1px solid #333355;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(102, 204, 255, 0.2);
+            padding: 20px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        
+        .wish-overlay.active .wish-container {
+            transform: scale(1);
+        }
+        
+        .wish-result {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .wish-item {
+            width: 120px;
+            height: 180px;
+            background: linear-gradient(135deg, #252540 0%, #151525 100%);
+            border: 1px solid #444466;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .wish-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(102, 204, 255, 0.3);
+        }
+        
+        .wish-item.star5 {
+            border: 1px solid #ffcc00;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+        }
+        
+        .wish-item.star4 {
+            border: 1px solid #cc66ff;
+            box-shadow: 0 0 10px rgba(204, 102, 255, 0.3);
+        }
+        
+        .wish-item.star3 {
+            border: 1px solid #66ccff;
+            box-shadow: 0 0 10px rgba(102, 204, 255, 0.3);
+        }
+        
+        .wish-stars {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 3px;
+        }
+        
+        .wish-star {
+            color: #ffcc00;
+            font-size: 0.8rem;
+        }
+        
+        .wish-image {
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-bottom: 10px;
+        }
+        
+        .wish-name {
+            font-size: 0.9rem;
+            color: #fff;
+            margin-top: 5px;
+        }
+        
+        .wish-type {
+            font-size: 0.7rem;
+            color: #b8b8cc;
+        }
+        
+        .wish-close {
+            background: linear-gradient(90deg, #ff9966, #ffcc00);
+            border: none;
+            color: #1a1a2e;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .wish-close:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+        }
+        
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
+            100% { text-shadow: 0 0 20px rgba(255, 204, 0, 0.5), 0 0 30px rgba(255, 153, 102, 0.3); }
+        }
+        
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(50px); opacity: 0; }
+        }
+        
+        @keyframes floatDown {
+            0% { transform: translateY(-100px) translateX(0); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(100vh) translateX(-50px); opacity: 0; }
+        }
+        
+        @keyframes zigzag {
+            0% { transform: translateY(50vh) translateX(-50px); opacity: 0; }
+            20% { transform: translateY(40vh) translateX(50px); opacity: 0.5; }
+            40% { transform: translateY(30vh) translateX(-30px); }
+            60% { transform: translateY(20vh) translateX(40px); }
+            80% { transform: translateY(10vh) translateX(-20px); opacity: 0.5; }
+            100% { transform: translateY(0) translateX(30px); opacity: 0; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes rotateSlow {
+            to { transform: rotate(360deg); }
+        }
+        
+        .volume-control {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+        
+        #volumeSlider {
+            width: 100px;
+            margin-left: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #ff9966, #ffcc00);
+            border: none;
+            color: #1a1a2e;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            animation: fadeIn 1s forwards 2s;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+        }
+        
+        /* Анимация появления предметов */
+        @keyframes wishPulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .wish-item {
+            animation: wishPulse 0.5s forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="title">Никита</h1>
+        <p class="message">
+            Пусть поход в госдуму будет хорошим<br>
+            писька стояла деньги были!<br>
+            и мечты исполнялись как тут лудка!
+        </p>
+        <p class="signature">С уважением, не уважай</p>
+        
+        <button class="btn" id="wishBtn">Сделать молитву ×10</button>
+        
+        <div class="character paimon"></div>
+        
+        <div class="volume-control">
+            <span>🔊</span>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
+        </div>
+        
+        <!-- Оверлей молитвы -->
+        <div class="wish-overlay" id="wishOverlay">
+            <div class="wish-container">
+                <h2 style="color: #ffcc00;">Результаты молитвы</h2>
+                <div class="wish-result" id="wishResult">
+                    <!-- Здесь будут появляться предметы -->
+                </div>
+                <button class="wish-close" id="wishClose">Закрыть</button>
+            </div>
+        </div>
+        
+        <audio id="genshinAudio" loop>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="wishSound">
+            <source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-sparkles-1681.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="wish5StarSound">
+            <source src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // База данных предметов для молитвы
+            const wishItems = [
+                // 5★ персонажи
+                { name: "Zhongli", type: "Персонаж (Гео)", stars: 5, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='20' width='60' height='80' fill='%23ffcc66'/><circle cx='50' cy='40' r='15' fill='%23333366'/><rect x='40' y='55' width='20' height='30' fill='%23333366'/></svg>" },
+                { name: "Raiden Shogun", type: "Персонаж (Электро)", stars: 5, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='20' width='60' height='80' fill='%23cc66ff'/><circle cx='50' cy='40' r='15' fill='%23333366'/><rect x='40' y='55' width='20' height='30' fill='%23333366'/></svg>" },
+                { name: "Venti", type: "Персонаж (Анемо)", stars: 5, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='20' width='60' height='80' fill='%2366ffcc'/><circle cx='50' cy='40' r='15' fill='%23333366'/><rect x='40' y='55' width='20' height='30' fill='%23333366'/></svg>" },
+                
+                // 4★ персонажи
+                { name: "Bennett", type: "Персонаж (Пиро)", stars: 4, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='20' width='60' height='80' fill='%23ff6666'/><circle cx='50' cy='40' r='15' fill='%23333366'/><rect x='40' y='55' width='20' height='30' fill='%23333366'/></svg>" },
+                { name: "Xingqiu", type: "Персонаж (Гидро)", stars: 4, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='20' width='60' height='80' fill='%2366ccff'/><circle cx='50' cy='40' r='15' fill='%23333366'/><rect x='40' y='55' width='20' height='30' fill='%23333366'/></svg>" },
+                { name: "Fischl", type: "Персонаж (Электро)", stars: 4, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='20' width='60' height='80' fill='%23cc66ff'/><circle cx='50' cy='40' r='15' fill='%23333366'/><rect x='40' y='55' width='20' height='30' fill='%23333366'/></svg>" },
+                
+                // 4★ оружие
+                { name: "Меч Фавония", type: "Оружие (Меч)", stars: 4, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='45' y='10' width='10' height='80' fill='%2366ccff'/><polygon points='50,10 70,30 60,40 40,20' fill='%2366ccff'/></svg>" },
+                { name: "Церемониальный лук", type: "Оружие (Лук)", stars: 4, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50,10 Q70,50 50,90 Q30,50 50,10' fill='none' stroke='%23cc66ff' stroke-width='8'/><path d='M50,10 L50,30' stroke='%23cc66ff' stroke-width='3'/></svg>" },
+                
+                // 3★ оружие
+                { name: "Меч путешественника", type: "Оружие (Меч)", stars: 3, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='45' y='10' width='10' height='80' fill='%2366ccff'/><polygon points='50,10 60,20 40,20' fill='%2366ccff'/></svg>" },
+                { name: "Копьё новичка", type: "Оружие (Копьё)", stars: 3, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='48' y='10' width='4' height='80' fill='%23b8b8cc'/><polygon points='50,10 60,20 40,20' fill='%23b8b8cc'/></svg>" },
+                { name: "Молитва святым ветрам", type: "Оружие (Катализатор)", stars: 3, image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='30' fill='none' stroke='%2366ffcc' stroke-width='5'/><circle cx='50' cy='50' r='20' fill='none' stroke='%2366ffcc' stroke-width='3'/></svg>" },
+            ];
+            
+            // Создаем элементальные частицы
+            function createParticles() {
+                const types = ['anemo', 'geo', 'electro'];
+                
+                for (let i = 0; i < 20; i++) {
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    const particle = document.createElement('div');
+                    particle.className = `elemental-particle ${type}-particle`;
+                    
+                    const size = Math.random() * 10 + 3;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.left = `${Math.random() * 100}vw`;
+                    
+                    if (type === 'anemo') {
+                        particle.style.top = `${Math.random() * 50 + 50}vh`;
+                    } else if (type === 'geo') {
+                        particle.style.top = `${Math.random() * 50 - 10}vh`;
+                    } else {
+                        particle.style.top = `${Math.random() * 100}vh`;
+                    }
+                    
+                    const duration = Math.random() * 10 + 10;
+                    particle.style.animationDuration = `${duration}s`;
+                    
+                    document.querySelector('.card').appendChild(particle);
+                    
+                    setTimeout(() => {
+                        particle.remove();
+                    }, duration * 1000);
+                }
+            }
+            
+            setInterval(createParticles, 2000);
+            createParticles();
+            
+            // Создаем иконки стихий (Visions)
+            function createVisionIcons() {
+                const visions = [
+                    {element: 'anemo', color: '#66ffcc', left: '10%', top: '20%'},
+                    {element: 'geo', color: '#ffcc66', left: '85%', top: '30%'},
+                    {element: 'electro', color: '#cc66ff', left: '20%', top: '70%'},
+                    {element: 'hydro', color: '#66ccff', left: '75%', top: '60%'}
+                ];
+                
+                visions.forEach(vision => {
+                    const icon = document.createElement('div');
+                    icon.className = 'vision-icon';
+                    icon.style.left = vision.left;
+                    icon.style.top = vision.top;
+                    icon.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="${encodeURIComponent(vision.color)}" stroke-width="3"/><path d="M50,10 L70,50 L50,90 L30,50 Z" fill="none" stroke="${encodeURIComponent(vision.color)}" stroke-width="3"/></svg>')`;
+                    
+                    document.querySelector('.card').appendChild(icon);
+                });
+            }
+            
+            createVisionIcons();
+            
+            // Аудио элементы
+            const audio = document.getElementById('genshinAudio');
+            const wishSound = document.getElementById('wishSound');
+            const wish5StarSound = document.getElementById('wish5StarSound');
+            const volumeSlider = document.getElementById('volumeSlider');
+            
+            // Воспроизводим аудио при взаимодействии
+            document.addEventListener('click', function() {
+                audio.play().catch(e => console.log("Автовоспроизведение заблокировано"));
+            }, { once: true });
+            
+            // Контроль громкости
+            volumeSlider.addEventListener('input', function() {
+                audio.volume = this.value;
+                wishSound.volume = this.value;
+                wish5StarSound.volume = this.value;
+            });
+            
+            // Элементы молитвы
+            const wishBtn = document.getElementById('wishBtn');
+            const wishOverlay = document.getElementById('wishOverlay');
+            const wishResult = document.getElementById('wishResult');
+            const wishClose = document.getElementById('wishClose');
+            
+            // Функция для создания молитвы
+            function makeWish() {
+                // Воспроизводим звук молитвы
+                wishSound.currentTime = 0;
+                wishSound.play();
+                
+                // Очищаем предыдущие результаты
+                wishResult.innerHTML = '';
+                
+                // Создаем 10 предметов с учетом редкости
+                let has5Star = false;
+                const results = [];
+                
+                for (let i = 0; i < 10; i++) {
+                    // Шансы: 5★ - 0.6%, 4★ - 5.1%, 3★ - 94.3%
+                    const roll = Math.random() * 100;
+                    let stars;
+                    
+                    if (roll < 0.6) {
+                        stars = 5;
+                        has5Star = true;
+                    } else if (roll < 5.7) {
+                        stars = 4;
+                    } else {
+                        stars = 3;
+                    }
+                    
+                    // Фильтруем предметы по редкости
+                    const filteredItems = wishItems.filter(item => item.stars === stars);
+                    const randomItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
+                    
+                    results.push(randomItem);
+                }
+                
+                // Гарантированный 4★ если не выпало ни одного
+                if (!results.some(item => item.stars >= 4)) {
+                    const filteredItems = wishItems.filter(item => item.stars === 4);
+                    const randomItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
+                    results[Math.floor(Math.random() * 10)] = randomItem;
+                }
+                
+                // Гарантированный 5★ на 90 молитве (имитация)
+                if (Math.random() < 0.1) { // 10% шанс для демонстрации
+                    const filteredItems = wishItems.filter(item => item.stars === 5);
+                    const randomItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
+                    results[Math.floor(Math.random() * 10)] = randomItem;
+                    has5Star = true;
+                }
+                
+                // Показываем предметы с задержкой
+                results.forEach((item, index) => {
+                    setTimeout(() => {
+                        const wishItem = document.createElement('div');
+                        wishItem.className = `wish-item star${item.stars}`;
+                        
+                        // Создаем звезды редкости
+                        const starsDiv = document.createElement('div');
+                        starsDiv.className = 'wish-stars';
+                        for (let i = 0; i < item.stars; i++) {
+                            const star = document.createElement('div');
+                            star.className = 'wish-star';
+                            star.innerHTML = '★';
+                            starsDiv.appendChild(star);
+                        }
+                        
+                        // Изображение и текст
+                        const imageDiv = document.createElement('div');
+                        imageDiv.className = 'wish-image';
+                        imageDiv.style.backgroundImage = `url('${item.image}')`;
+                        
+                        const nameDiv = document.createElement('div');
+                        nameDiv.className = 'wish-name';
+                        nameDiv.textContent = item.name;
+                        
+                        const typeDiv = document.createElement('div');
+                        typeDiv.className = 'wish-type';
+                        typeDiv.textContent = item.type;
+                        
+                        wishItem.appendChild(starsDiv);
+                        wishItem.appendChild(imageDiv);
+                        wishItem.appendChild(nameDiv);
+                        wishItem.appendChild(typeDiv);
+                        
+                        wishResult.appendChild(wishItem);
+                        
+                        // Воспроизводим особый звук для 5★
+                        if (item.stars === 5 && !has5Star) {
+                            wish5StarSound.currentTime = 0;
+                            wish5StarSound.play();
+                            has5Star = true;
+                        }
+                    }, index * 150);
+                });
+                
+                // Показываем оверлей
+                wishOverlay.classList.add('active');
+            }
+            
+            // Кнопка молитвы
+            wishBtn.addEventListener('click', makeWish);
+            
+            // Кнопка закрытия
+            wishClose.addEventListener('click', function() {
+                wishOverlay.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>
